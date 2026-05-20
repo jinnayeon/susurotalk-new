@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  role      String   @default("child")
+  createdAt DateTime @default(now())
+
+  childProfile ChildProfile?
+  studyTasks   StudyTask[]
+  stickers     Sticker[]
+}
+
+model ChildProfile {
+  id          String @id @default(uuid())
+  userId      String @unique
+  nickname    String
+  grade       Int    @default(1)
+  characterId String @default("bbonggu")
+  totalPoints Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model StudyTask {
+  id          String    @id @default(uuid())
+  userId      String
+  title       String
+  subject     String
+  status      String    @default("pending")
+  date        DateTime  @default(now())
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Sticker {
+  id       String   @id @default(uuid())
+  userId   String
+  type     String
+  earnedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}

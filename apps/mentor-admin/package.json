@@ -1,0 +1,9 @@
+{
+  "name": "@seolf-talk/mentor-admin",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'mentor-admin: TBD'",
+    "build": "echo 'mentor-admin: TBD'"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "스스로톡",
+    "slug": "seolf-talk-student",
+    "version": "1.0.0",
+    "scheme": "seolftalk",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "splash": {
+      "backgroundColor": "#FFF8E7"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.seolftalk.student"
+    },
+    "android": {
+      "package": "com.seolftalk.student"
+    },
+    "plugins": ["expo-router", "expo-secure-store"]
+  }
+}
