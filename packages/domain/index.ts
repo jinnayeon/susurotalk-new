@@ -76,3 +76,4 @@ export const SKIN_CATALOG = [
 ] as const
 
 export * from './levelTest'
+export * from './vocabularyDiagnosis'

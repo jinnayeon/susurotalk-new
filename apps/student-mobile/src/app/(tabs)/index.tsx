@@ -59,6 +59,18 @@ export default function HomeScreen() {
         <Text style={styles.startBtnText}>📚 공부 시작하기</Text>
       </TouchableOpacity>
 
+      {/* 국어 어휘력 진단 진입 카드 (학습 참고용) */}
+      <TouchableOpacity style={styles.vocabCard} onPress={() => router.push('/study')}>
+        <View style={styles.vocabCardLeft}>
+          <Text style={styles.vocabCardEmoji}>🔤</Text>
+          <View>
+            <Text style={styles.vocabCardTitle}>국어 어휘력 진단</Text>
+            <Text style={styles.vocabCardSub}>학습 참고용 · Lv.1 ~ Lv.6</Text>
+          </View>
+        </View>
+        <Text style={styles.vocabCardArrow}>→</Text>
+      </TouchableOpacity>
+
       <View style={styles.card}>
         <Text style={styles.cardTitle}>오늘의 미션</Text>
         {loading ? (
@@ -98,6 +110,16 @@ const styles = StyleSheet.create({
   pointValue: { fontSize: 20, fontWeight: '800' },
   startBtn: { borderRadius: 20, padding: 18, alignItems: 'center', marginBottom: 24 },
   startBtnText: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  vocabCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#FFF3E0', borderRadius: 20, padding: 16, marginBottom: 16,
+    borderWidth: 1.5, borderColor: '#FFB74D',
+  },
+  vocabCardLeft: { flexDirection: 'row', alignItems: 'center' },
+  vocabCardEmoji: { fontSize: 30, marginRight: 12 },
+  vocabCardTitle: { fontSize: 15, fontWeight: '700', color: '#3D2B1F' },
+  vocabCardSub: { fontSize: 12, color: '#A89080', marginTop: 2 },
+  vocabCardArrow: { fontSize: 20, color: '#F4A428', fontWeight: '700' },
   card: { backgroundColor: '#fff', borderRadius: 20, padding: 20, borderWidth: 1.5, borderColor: '#E8D5B7', marginBottom: 16 },
   cardTitle: { fontSize: 16, fontWeight: '700', color: '#3D2B1F', marginBottom: 12 },
   taskRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },

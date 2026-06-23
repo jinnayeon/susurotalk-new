@@ -7,6 +7,7 @@ import { rewardRouter } from './routes/reward'
 import { learningRouter } from './routes/learning'
 import { boardRouter } from './routes/board'
 import { levelTestRouter } from './routes/levelTest'
+import { vocabularyRouter } from './routes/vocabulary'
 import { mentorRouter } from './routes/mentor'
 import { errorHandler } from './middleware/errorHandler'
 
@@ -24,6 +25,7 @@ app.use('/rewards', rewardRouter)
 app.use('/learning', learningRouter)
 app.use('/board', boardRouter)
 app.use('/level-test', levelTestRouter)
+app.use('/vocabulary', vocabularyRouter)
 app.use('/mentor', mentorRouter)
 
 app.use(errorHandler)
