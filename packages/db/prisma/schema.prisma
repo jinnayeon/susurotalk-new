@@ -11,23 +11,45 @@ datasource db {
 model User {
   id        String   @id @default(uuid())
   phone     String   @unique
-  role      String   @default("child")
+  role      String   @default("child") // child | mentor | parent
   createdAt DateTime @default(now())
 
-  childProfile ChildProfile?
-  studyTasks   StudyTask[]
-  stickers     Sticker[]
+  childProfile    ChildProfile?
+  mentorProfile   MentorProfile?
+  studyTasks      StudyTask[]
+  stickers        Sticker[]
+  studentSkins    StudentSkin[]
+  learningStates  LearningState[]
+  boardPosts      BoardPost[]
+  boardComments   BoardComment[]
+  mentorMatches   MentorMatch[]
+  levelTestResults LevelTestResult[]
 }
 
 model ChildProfile {
-  id          String @id @default(uuid())
-  userId      String @unique
-  nickname    String
-  grade       Int    @default(1)
-  characterId String @default("bbonggu")
-  totalPoints Int    @default(0)
+  id            String  @id @default(uuid())
+  userId        String  @unique
+  nickname      String
+  grade         Int     @default(1)
+  characterId   String  @default("bonggu")
+  totalPoints   Int     @default(0)
+  levelTested   Boolean @default(false)
+  subjectLevels Json    @default("{}") // { "math": "mid", "korean": "low", "english": "high" }
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model MentorProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  name        String
+  bio         String   @default("")
+  subjects    Json     @default("[]") // ["math", "korean", "english"]
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  user    User          @relation(fields: [userId], references: [id])
+  matches MentorMatch[]
 }
 
 model StudyTask {
@@ -39,7 +61,8 @@ model StudyTask {
   date        DateTime  @default(now())
   completedAt DateTime?
 
-  user User @relation(fields: [userId], references: [id])
+  user          User           @relation(fields: [userId], references: [id])
+  learningState LearningState?
 }
 
 model Sticker {
@@ -49,4 +72,111 @@ model Sticker {
   earnedAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+}
+
+// 상점 아이템 (스킨 등)
+model Reward {
+  id          String   @id @default(uuid())
+  title       String
+  price       Int
+  rewardType  String   @default("SKIN")
+  stock       Int      @default(-1) // -1 = 무제한
+  skinName    String?
+  characterId String?
+  createdAt   DateTime @default(now())
+
+  studentSkins StudentSkin[]
+}
+
+// 아이가 구매한 스킨
+model StudentSkin {
+  id          String   @id @default(uuid())
+  userId      String
+  rewardId    String
+  skinName    String
+  characterId String
+  isEquipped  Boolean  @default(false)
+  purchasedAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  reward Reward @relation(fields: [rewardId], references: [id])
+
+  @@unique([userId, rewardId])
+}
+
+// 학습 세션 상태 (SOS 시스템)
+model LearningState {
+  id          String   @id @default(uuid())
+  userId      String
+  taskId      String   @unique
+  characterId String
+  status      String   @default("IN_PROGRESS") // IN_PROGRESS | COMPLETED | MENTOR_HELP_REQUIRED
+  wrongCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User      @relation(fields: [userId], references: [id])
+  task StudyTask @relation(fields: [taskId], references: [id])
+}
+
+// ─── 돌봄&학습 게시판 (ClassroomIO 참고) ───────────────────────────
+
+// 아이가 올린 질문/도움 요청 게시글
+model BoardPost {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  content   String
+  subject   String   // math | korean | english | etc
+  grade     Int
+  status    String   @default("OPEN") // OPEN | MATCHED | RESOLVED | CLOSED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id])
+  comments BoardComment[]
+  match    MentorMatch?
+}
+
+// 멘토(또는 다른 사용자)의 댓글/답변
+model BoardComment {
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  content   String
+  isAnswer  Boolean  @default(false) // 멘토가 채택한 정답 답변
+  createdAt DateTime @default(now())
+
+  post BoardPost @relation(fields: [postId], references: [id])
+  user User      @relation(fields: [userId], references: [id])
+}
+
+// 멘토-학생 1:1 매칭 (ClassroomIO의 enrollment 개념 적용)
+model MentorMatch {
+  id            String    @id @default(uuid())
+  postId        String    @unique
+  mentorUserId  String
+  status        String    @default("ACTIVE") // ACTIVE | COMPLETED | CANCELLED
+  matchedAt     DateTime  @default(now())
+  resolvedAt    DateTime?
+
+  post          BoardPost     @relation(fields: [postId], references: [id])
+  mentorUser    User          @relation(fields: [mentorUserId], references: [id], map: "MentorMatch_mentorUser_fkey")
+  mentorProfile MentorProfile @relation(fields: [mentorUserId], references: [userId], map: "MentorMatch_mentorProfile_fkey")
+}
+
+// ─── 레벨 테스트 결과 ────────────────────────────────────────────────
+
+model LevelTestResult {
+  id        String   @id @default(uuid())
+  userId    String
+  subject   String   // math | korean | english
+  score     Int      // 0-5
+  level     String   // low | mid | high
+  answers   Json     // 제출한 답안 기록
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, subject]) // 과목당 최신 결과 1건
 }

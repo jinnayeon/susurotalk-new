@@ -20,6 +20,10 @@ export default function TabsLayout() {
         options={{ title: '오늘공부', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📚</Text> }}
       />
       <Tabs.Screen
+        name="board"
+        options={{ title: '질문게시판', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>💬</Text> }}
+      />
+      <Tabs.Screen
         name="store"
         options={{ title: '내기록', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>⭐</Text> }}
       />

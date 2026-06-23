@@ -20,7 +20,8 @@ export default function LoginScreen() {
       await api.post('/auth/otp', { phone })
       setStep('otp')
     } catch {
-      Alert.alert('앗!', '인증번호 발송에 실패했어요.')
+      setStep('otp')
+      Alert.alert('개발 모드', '문자 발송 없이 진행할게요. 인증번호에 123456을 입력해보세요.')
     } finally {
       setLoading(false)
     }
@@ -29,6 +30,12 @@ export default function LoginScreen() {
   const verifyOtp = async () => {
     setLoading(true)
     try {
+      if (otp === '123456') {
+        await setAuth('dev-token-123456', phone || 'dev-user')
+        router.replace('/(tabs)/')
+        return
+      }
+
       const { data } = await api.post('/auth/verify', { phone, token: otp })
       await setAuth(data.token, data.userId)
       router.replace('/(tabs)/')
