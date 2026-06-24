@@ -52,17 +52,31 @@ authRouter.post('/verify', async (req, res, next) => {
       }
     }
 
-    let user = await prisma.user.findUnique({ where: { phone } })
-    const isNew = !user
-    if (!user) {
-      user = await prisma.user.create({ data: { phone } })
+    let userId: string
+    let isNew = false
+    try {
+      let user = await prisma.user.findUnique({ where: { phone } })
+      isNew = !user
+      if (!user) {
+        user = await prisma.user.create({ data: { phone } })
+      }
+      userId = user.id
+    } catch (dbErr) {
+      // 개발용 우회 코드(123456)인데 DB가 닿지 않을 때만 오프라인 dev 사용자로 폴백.
+      // 실서비스(실제 인증코드)나 DB 정상 시에는 기존 로직 그대로 동작.
+      if (token === '123456') {
+        userId = `dev-${phone}`
+        isNew = false
+      } else {
+        throw dbErr
+      }
     }
 
-    const accessToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
+    const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET!, {
       expiresIn: '30d',
     })
 
-    res.json({ token: accessToken, userId: user.id, isNew })
+    res.json({ token: accessToken, userId, isNew })
   } catch (err) {
     next(err)
   }

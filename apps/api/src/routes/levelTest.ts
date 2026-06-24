@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import { prisma } from '@seolf-talk/db'
+import { prisma, Prisma } from '@seolf-talk/db'
 import { requireAuth, AuthRequest } from '../middleware/auth'
 import {
   getQuestionsForTest,
@@ -62,8 +62,8 @@ levelTestRouter.post('/submit', async (req: AuthRequest, res, next) => {
       // upsert: 같은 과목은 최신 결과로 덮어씀
       await prisma.levelTestResult.upsert({
         where: { userId_subject: { userId: req.userId!, subject } },
-        create: { userId: req.userId!, subject, score, level, answers: subjectAnswers },
-        update: { score, level, answers: subjectAnswers, createdAt: new Date() },
+        create: { userId: req.userId!, subject, score, level, answers: subjectAnswers as unknown as Prisma.InputJsonValue },
+        update: { score, level, answers: subjectAnswers as unknown as Prisma.InputJsonValue, createdAt: new Date() },
       })
 
       results.push({ subject, score, level })
@@ -90,6 +90,12 @@ levelTestRouter.get('/my-result', async (req: AuthRequest, res, next) => {
     const testResults = await prisma.levelTestResult.findMany({ where: { userId: req.userId! } })
     res.json({ levelTested: profile?.levelTested ?? false, subjectLevels: profile?.subjectLevels ?? {}, results: testResults })
   } catch (err) {
+    // DB 불통(오프라인 등) 시 앱이 레벨테스트 게이트에 갇히지 않도록 우아하게 폴백.
+    // dev 사용자는 게이트를 통과시키고, 그 외에는 기존 에러 처리 유지.
+    if (req.userId?.startsWith('dev-')) {
+      res.json({ levelTested: true, subjectLevels: {}, results: [] })
+      return
+    }
     next(err)
   }
 })
