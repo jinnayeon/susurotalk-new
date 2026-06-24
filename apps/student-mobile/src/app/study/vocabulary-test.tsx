@@ -62,6 +62,11 @@ export default function VocabularyTestScreen() {
 
   useFocusEffect(useCallback(() => { load() }, [load]))
 
+  const goBack = () => {
+    if (router.canGoBack()) router.back()
+    else router.replace('/study')
+  }
+
   const submit = async (finalAnswers: Record<string, number>) => {
     setSubmitting(true)
     try {
@@ -124,6 +129,10 @@ export default function VocabularyTestScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
+        <TouchableOpacity style={styles.backTop} onPress={goBack} hitSlop={10}>
+          <Text style={styles.backTopText}>‹ 뒤로</Text>
+        </TouchableOpacity>
+
         <View style={styles.topRow}>
           <Text style={styles.levelTag}>{label}</Text>
           <Text style={styles.typeTag}>{TYPE_LABEL[currentQ.questionType] ?? currentQ.questionType}</Text>
@@ -155,6 +164,8 @@ const styles = StyleSheet.create({
   progressBarWrap: { height: 6, backgroundColor: '#E8D5B7' },
   progressBar: { height: 6, backgroundColor: '#F4A428' },
   content: { padding: 24, paddingBottom: 40 },
+  backTop: { alignSelf: 'flex-start', paddingVertical: 6, marginBottom: 4 },
+  backTopText: { color: '#7A6152', fontSize: 16, fontWeight: '700' },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   levelTag: { fontSize: 13, fontWeight: '800', color: '#F4A428' },
   typeTag: { fontSize: 12, color: '#fff', backgroundColor: '#FFB74D', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, overflow: 'hidden' },

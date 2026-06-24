@@ -44,6 +44,8 @@ interface TestResult {
   reviewWords: string[]
   recommendedLevel: number
   recommendedLevelLabel: string
+  needsLowerLevelCheck?: boolean
+  levelConfirmed?: boolean
   answerDetails: AnswerDetail[]
   report: Report
 }
@@ -105,6 +107,11 @@ export default function TestResultScreen() {
   const bandColor = RESULT_BAND_COLOR[result.resultBand] ?? '#E8D5B7'
   const bandEmoji = RESULT_BAND_EMOJI[result.resultBand] ?? '📝'
 
+  const goBack = () => {
+    if (router.canGoBack()) router.back()
+    else router.replace('/study')
+  }
+
   const retryTest = () => {
     router.replace({
       pathname: '/study/vocabulary-test',
@@ -123,12 +130,33 @@ export default function TestResultScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
 
+        <TouchableOpacity style={styles.backTop} onPress={goBack} hitSlop={10}>
+          <Text style={styles.backTopText}>‹ 뒤로</Text>
+        </TouchableOpacity>
+
         {/* 결과 헤더 */}
         <View style={[styles.resultHeader, { backgroundColor: bandColor }]}>
           <Text style={styles.resultEmoji}>{bandEmoji}</Text>
           <Text style={styles.resultBandText}>{result.resultBand}</Text>
           <Text style={styles.resultLevelText}>Lv.{result.level} · {result.targetBand} 권장</Text>
         </View>
+
+        {/* 정밀 재진단 안내 (현재 레벨이 어려웠을 때) */}
+        {result.needsLowerLevelCheck && (
+          <View style={styles.descentBanner}>
+            <Text style={styles.descentEmoji}>🔎</Text>
+            <Text style={styles.descentTitle}>정확한 수준을 확인해 볼까요?</Text>
+            <Text style={styles.descentText}>
+              이번 Lv.{result.level} 어휘가 조금 어려웠어요.{'\n'}
+              {result.recommendedLevelLabel}을 바로 풀어보면 더 정확한 수준을 알 수 있어요.
+            </Text>
+            <TouchableOpacity style={styles.descentBtn} onPress={tryNextLevel}>
+              <Text style={styles.descentBtnText}>
+                {result.recommendedLevelLabel} 정밀 진단 바로 풀기 →
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* 점수 카드 */}
         <View style={styles.card}>
@@ -181,7 +209,7 @@ export default function TestResultScreen() {
             {result.recommendedLevelLabel} 테스트
           </Text>
           <Text style={styles.nextLevelDesc}>{result.report.nextTestDescription}</Text>
-          {result.recommendedLevel !== result.level && (
+          {result.recommendedLevel !== result.level && !result.needsLowerLevelCheck && (
             <TouchableOpacity style={styles.nextBtn} onPress={tryNextLevel}>
               <Text style={styles.nextBtnText}>
                 {result.recommendedLevel > result.level
@@ -224,6 +252,31 @@ const styles = StyleSheet.create({
   content: { padding: 20 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   errorText: { fontSize: 16, color: '#A89080', marginBottom: 20 },
+
+  backTop: { alignSelf: 'flex-start', paddingVertical: 6, marginBottom: 4 },
+  backTopText: { color: '#7A6152', fontSize: 16, fontWeight: '700' },
+
+  // 정밀 재진단 안내
+  descentBanner: {
+    backgroundColor: '#FFF3E0',
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: '#F4A428',
+    alignItems: 'center',
+  },
+  descentEmoji: { fontSize: 36, marginBottom: 6 },
+  descentTitle: { fontSize: 17, fontWeight: '800', color: '#3D2B1F', marginBottom: 8, textAlign: 'center' },
+  descentText: { fontSize: 13, color: '#7A6152', lineHeight: 20, textAlign: 'center', marginBottom: 16 },
+  descentBtn: {
+    backgroundColor: '#F4A428',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignSelf: 'stretch',
+  },
+  descentBtnText: { color: '#fff', fontWeight: '800', fontSize: 15, textAlign: 'center' },
 
   // 결과 헤더
   resultHeader: {

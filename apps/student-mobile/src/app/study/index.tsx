@@ -46,9 +46,18 @@ export default function StudyScreen() {
 
   useFocusEffect(useCallback(() => { load() }, [load]))
 
+  const goBack = () => {
+    if (router.canGoBack()) router.back()
+    else router.replace('/(tabs)/')
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
+        <TouchableOpacity style={styles.backTop} onPress={goBack} hitSlop={10}>
+          <Text style={styles.backTopText}>‹ 뒤로</Text>
+        </TouchableOpacity>
+
         <Text style={styles.headerEmoji}>🔤</Text>
         <Text style={styles.title}>국어 어휘력 진단</Text>
         <Text style={styles.subtitle}>
@@ -111,6 +120,8 @@ export default function StudyScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FFF8E7' },
   content: { padding: 20 },
+  backTop: { alignSelf: 'flex-start', paddingVertical: 6 },
+  backTopText: { color: '#7A6152', fontSize: 16, fontWeight: '700' },
   headerEmoji: { fontSize: 48, textAlign: 'center', marginTop: 12 },
   title: { fontSize: 24, fontWeight: '800', color: '#3D2B1F', textAlign: 'center', marginTop: 8 },
   subtitle: { fontSize: 14, color: '#7A6152', textAlign: 'center', lineHeight: 22, marginTop: 8, marginBottom: 16 },

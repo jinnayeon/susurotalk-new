@@ -136,6 +136,10 @@ export interface VocabularyResult {
   reviewWords: string[]
   recommendedLevel: VocabLevel
   recommendedLevelLabel: string
+  /** 현재 레벨 점수가 낮아 한 단계 아래에서 정밀 재진단이 필요한지 여부 */
+  needsLowerLevelCheck: boolean
+  /** 현재 점수로 이 레벨이 적정 수준으로 확인됐는지 여부 (정밀 진단 종료 신호) */
+  levelConfirmed: boolean
   answerDetails: VocabAnswerDetail[]
   report: VocabularyReport
 }
@@ -1143,10 +1147,18 @@ export function calcResultBand(scorePercent: number): VocabResultBand {
   return '현재 레벨 안정권'
 }
 
+/** 한 단계 위 레벨에 도전해도 좋은 점수 기준 */
+export const VOCAB_ASCEND_THRESHOLD = 80
+/**
+ * 이 점수 미만이면 "현재 레벨이 어렵다"고 보고 한 단계 아래에서 정밀 재진단을 권장한다.
+ * (상위 레벨을 풀었는데 점수가 낮으면 바로 아래 레벨로 내려가 정확한 수준을 찾기 위함)
+ */
+export const VOCAB_PASS_THRESHOLD = 60
+
 /** 결과에 따른 다음 권장 레벨 */
 export function calcRecommendedLevel(level: VocabLevel, scorePercent: number): VocabLevel {
-  if (scorePercent >= 80 && level < 6) return (level + 1) as VocabLevel
-  if (scorePercent < 40 && level > 1) return (level - 1) as VocabLevel
+  if (scorePercent >= VOCAB_ASCEND_THRESHOLD && level < 6) return (level + 1) as VocabLevel
+  if (scorePercent < VOCAB_PASS_THRESHOLD && level > 1) return (level - 1) as VocabLevel
   return level
 }
 
@@ -1180,6 +1192,10 @@ export function gradeVocabulary(
 
   const resultBand = calcResultBand(scorePercent)
   const recommendedLevel = calcRecommendedLevel(level, scorePercent)
+  // 점수가 통과 기준 미만이고 더 내려갈 레벨이 남아 있으면 → 한 단계 아래에서 정밀 재진단
+  const needsLowerLevelCheck = scorePercent < VOCAB_PASS_THRESHOLD && level > 1
+  // 통과 기준 이상이면 이 레벨이 현재 수준으로 확인됨 (정밀 진단 종료)
+  const levelConfirmed = scorePercent >= VOCAB_PASS_THRESHOLD
 
   // 유형별 정답률 → 강한/약한 영역
   const byType: Record<VocabQuestionType, { correct: number; total: number }> = {
@@ -1241,6 +1257,8 @@ export function gradeVocabulary(
     reviewWords,
     recommendedLevel,
     recommendedLevelLabel: `${recommendedMeta.label} (${recommendedMeta.targetBand})`,
+    needsLowerLevelCheck,
+    levelConfirmed,
     answerDetails,
     report,
   }
@@ -1281,9 +1299,10 @@ export function buildVocabularyReport(input: ReportInput): VocabularyReport {
     nextTestDescription =
       `${meta.label} 어휘를 잘 다뤘어요! 다음 단계인 ${recommendedMeta.label}(${recommendedMeta.targetBand}) 어휘에 도전해 보세요.`
   } else if (input.recommendedLevel < input.level) {
-    nextTestLabel = `${recommendedMeta.label} 복습`
+    nextTestLabel = `${recommendedMeta.label} 정밀 진단`
     nextTestDescription =
-      `기초를 한 번 더 다지면 좋아요. ${recommendedMeta.label}(${recommendedMeta.targetBand}) 어휘로 복습해 보세요.`
+      `${meta.label}(${meta.targetBand}) 어휘가 조금 어려웠어요. 더 정확한 수준 확인을 위해 ` +
+      `한 단계 아래인 ${recommendedMeta.label}(${recommendedMeta.targetBand})을 바로 풀어보는 걸 추천해요.`
   } else {
     nextTestLabel = `${meta.label} 한 번 더`
     nextTestDescription =
